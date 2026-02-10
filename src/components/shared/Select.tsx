@@ -1,0 +1,55 @@
+import type { SelectHTMLAttributes } from "react";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+  options: SelectOption[];
+  error?: string;
+  placeholder?: string;
+}
+
+export function Select({
+  label,
+  options,
+  error,
+  placeholder,
+  className = "",
+  id,
+  ...props
+}: SelectProps) {
+  const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+
+  return (
+    <div className="space-y-1">
+      {label && (
+        <label
+          htmlFor={selectId}
+          className="block text-sm font-medium text-gray-700"
+        >
+          {label}
+        </label>
+      )}
+      <select
+        id={selectId}
+        className={`block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 ${
+          error ? "border-danger-500" : ""
+        } ${className}`}
+        {...props}
+      >
+        {placeholder && (
+          <option value="">{placeholder}</option>
+        )}
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      {error && <p className="text-sm text-danger-500">{error}</p>}
+    </div>
+  );
+}
