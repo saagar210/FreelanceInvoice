@@ -53,6 +53,22 @@ describe("appStore", () => {
     expect(state.loading).toBe(false);
   });
 
+  it("loadSettings falls back for malformed tier/theme/rate values", async () => {
+    vi.mocked(commands.getAllSettings).mockResolvedValue([
+      { key: "tier", value: "enterprise" },
+      { key: "default_hourly_rate", value: "not-a-number" },
+      { key: "theme", value: "auto" },
+    ]);
+
+    await useAppStore.getState().loadSettings();
+
+    const state = useAppStore.getState();
+    expect(state.tier).toBe("free");
+    expect(state.defaultHourlyRate).toBe(100);
+    expect(state.theme).toBe("system");
+    expect(state.loading).toBe(false);
+  });
+
   it("loadSettings handles empty settings", async () => {
     vi.mocked(commands.getAllSettings).mockResolvedValue([]);
 
@@ -90,5 +106,15 @@ describe("appStore", () => {
     await useAppStore.getState().saveSetting("default_hourly_rate", "200");
 
     expect(useAppStore.getState().defaultHourlyRate).toBe(200);
+  });
+
+  it("saveSetting falls back hourly rate when provided invalid number", async () => {
+    vi.mocked(commands.setSetting).mockResolvedValue(undefined);
+
+    await useAppStore
+      .getState()
+      .saveSetting("default_hourly_rate", "not-a-number");
+
+    expect(useAppStore.getState().defaultHourlyRate).toBe(100);
   });
 });
