@@ -4,6 +4,27 @@ import * as commands from "../lib/commands";
 
 type Theme = "light" | "dark" | "system";
 
+const DEFAULT_TIER: Tier = "free";
+const DEFAULT_THEME: Theme = "system";
+const DEFAULT_HOURLY_RATE = 100;
+
+const isTier = (value: string | undefined): value is Tier =>
+  value === "free" || value === "pro" || value === "premium";
+
+const isTheme = (value: string | undefined): value is Theme =>
+  value === "light" || value === "dark" || value === "system";
+
+const parseTier = (value: string | undefined): Tier =>
+  isTier(value) ? value : DEFAULT_TIER;
+
+const parseTheme = (value: string | undefined): Theme =>
+  isTheme(value) ? value : DEFAULT_THEME;
+
+const parseHourlyRate = (value: string | undefined): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : DEFAULT_HOURLY_RATE;
+};
+
 interface AppStore {
   tier: Tier;
   businessName: string;
@@ -24,10 +45,10 @@ export const useAppStore = create<AppStore>()((set) => ({
   businessName: "",
   businessEmail: "",
   businessAddress: "",
-  defaultHourlyRate: 100,
+  defaultHourlyRate: DEFAULT_HOURLY_RATE,
   claudeApiKey: "",
   stripeApiKey: "",
-  theme: "system" as Theme,
+  theme: DEFAULT_THEME,
   loading: true,
 
   loadSettings: async () => {
@@ -36,14 +57,14 @@ export const useAppStore = create<AppStore>()((set) => ({
       const map = new Map(settings.map((s) => [s.key, s.value]));
 
       set({
-        tier: (map.get("tier") as Tier) ?? "free",
+        tier: parseTier(map.get("tier")),
         businessName: map.get("business_name") ?? "",
         businessEmail: map.get("business_email") ?? "",
         businessAddress: map.get("business_address") ?? "",
-        defaultHourlyRate: Number(map.get("default_hourly_rate") ?? "100"),
+        defaultHourlyRate: parseHourlyRate(map.get("default_hourly_rate")),
         claudeApiKey: map.get("claude_api_key") ?? "",
         stripeApiKey: map.get("stripe_api_key") ?? "",
-        theme: (map.get("theme") as Theme) ?? "system",
+        theme: parseTheme(map.get("theme")),
         loading: false,
       });
     } catch {
@@ -68,7 +89,7 @@ export const useAppStore = create<AppStore>()((set) => ({
     if (stateKey) {
       set({
         [stateKey]:
-          stateKey === "defaultHourlyRate" ? Number(value) : value,
+          stateKey === "defaultHourlyRate" ? parseHourlyRate(value) : value,
       } as Partial<AppStore>);
     }
   },
